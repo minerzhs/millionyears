@@ -31,20 +31,30 @@ Meteor.methods({
       userId: user._id,
       author: user.username,
       submitted: new Date().getTime(),
-      commentsCount: 0
+      commentsCount: 0,
+      upvoters: [],
+      votes: 0
     });
-
-    // if (! this.isSimulation) {
-    //   var Future = Npm.require('fibers/future');
-    //   var future = new Future();
-    //   Meteor.setTimeout(function(){
-    //     future.return();
-    //   }, 5 * 1000);
-    //   future.wait();
-    // }
 
     var postId = Posts.insert(post);
 
     return postId;
+  },
+
+  upvote: function(postId){
+    var user = Meteor.user();
+    if (!user)
+      throw new Meteor.Error(401,"you need to login to upvate");
+
+    Posts.update(
+      {
+        _id: postId,
+        upvoters: {$ne: user._id}
+      },
+      {
+        $addToSet: {upvoters: user._id},
+        $inc: {votes: 1}
+      }
+    );
   }
 });
